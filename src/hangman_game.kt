@@ -12,7 +12,6 @@ class Player(val name: String) {
     fun makeAGuess(): String {
         var guess: String? = null
         do {
-            println("Its ${name}'s turn, guess a letter or the whole word:")
             guess = readln().lowercase().trim()
         } while (isInvalidFormat(str = guess))
         return guess
@@ -105,6 +104,11 @@ class Session(protected var word: String = "") {
             var playerGuess: String
             var goodGuess: Boolean = false
             do {
+                if (goodGuess) {
+                    print("Letter was found, you can play again!\n${player.name}'s turn\n->")
+                } else if (!goodGuess) {
+                    print("Guess a letter or the whole word.\n${player.name}'s turn\n->")
+                }
                 var guessAlreadyCalled: Boolean = false
                 playerGuess = player.makeAGuess()
                 if (playerGuess.length == 1) {
