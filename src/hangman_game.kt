@@ -18,12 +18,39 @@ class Player(val name: String) {
     }
 }
 
-class Session(protected var word: String = "") {
+class Session(
+    protected var wordToFind: String = "", protected val wordBank: MutableList<String> = mutableListOf(
+        "car",
+        "tennis",
+        "baseball",
+        "hoven",
+        "golf",
+        "gym",
+        "elephant",
+        "tree",
+        "pool",
+        "book",
+        "water",
+        "food",
+        "pencil",
+        "dragon",
+        "cat",
+        "chair",
+        "summer",
+        "halloween",
+        "fortnite",
+        "radio",
+        "orange",
+        "hat",
+        "headphone",
+        "website"
+    )
+) {
     protected var hangman: String = "____\n    |\n    |\n    |"
     var wordProgress: MutableList<Char> = mutableListOf()
     var letterCalled: MutableList<Char> = mutableListOf()
-    var wordCalled: MutableList<String> = mutableListOf()
-    protected var wordIsFound: Boolean = false
+    var wordCalled: MutableList<String> = mutableListOf()//<---------------------WORK HERE
+    protected var gameIsWon: Boolean = false
     protected val players: MutableList<Player> = mutableListOf()
     protected val playersOrder: MutableList<Player> = mutableListOf()
 
@@ -51,24 +78,30 @@ class Session(protected var word: String = "") {
     protected fun checkIfCharIsFound(wordList: MutableList<Char>, guessedChar: Char): Boolean {
         if (guessedChar in letterCalled) return false
         var letterIsFound: Boolean = false
-        for (i in 0..word.length - 1) {
-            if (word[i] == guessedChar) {
+        for (i in 0..wordToFind.length - 1) {
+            if (wordToFind[i] == guessedChar) {
                 letterIsFound = true
                 wordList[i] = guessedChar
                 println(wordList.joinToString(" "))
-                println("$guessedChar is found in the word $word at the ${i + 1} place")
+                println("$guessedChar is found in the word $wordToFind at the ${i + 1} place")
             }
         }
         if (!letterIsFound) {
-            println("$guessedChar is not found in the word ${word}")
+            println("$guessedChar is not found in the word ${wordToFind}")
         }
         letterCalled.add(guessedChar)
         return letterIsFound
     }
 
+    protected fun checkIfAllLettersFound() {
+        val wordProgressInStr: String = wordProgress.joinToString("")
+        println(wordProgressInStr)
+        if (wordProgressInStr == wordToFind) gameIsWon = true
+    }
+
     protected fun initEmptyWordProgress() {
         val wordGrid: MutableList<Char> = mutableListOf()
-        for (letter in word) {
+        for (letter in wordToFind) {
             wordGrid.add('_')
         }
         wordProgress = wordGrid
@@ -84,7 +117,7 @@ class Session(protected var word: String = "") {
     }
 
     protected fun generateWord() {
-        word = "hello"
+        wordToFind = wordBank.random()
     }
 
     public fun startGame() {
@@ -96,7 +129,11 @@ class Session(protected var word: String = "") {
         selectFirstPlayer()
         do {
             playRound()
-        } while (!wordIsFound)
+        } while (!gameIsWon)
+    }
+
+    public fun endGame() {
+        println("You guess the word $wordToFind ! Games ending...")
     }
 
     public fun playRound() {
@@ -121,9 +158,14 @@ class Session(protected var word: String = "") {
                         wordList = wordProgress,
                         guessedChar = playerGuess[0]//Using the first and only letter of the guess
                     )
+                    checkIfAllLettersFound()
                 } else {
-                    println("You guessed a word")
+                    if (playerGuess == wordToFind) gameIsWon = true
+                    else {
+                        wordCalled.add(playerGuess)
+                    }
                 }
+                if (gameIsWon) return endGame()
             } while (guessAlreadyCalled || goodGuess)
         }
     }
