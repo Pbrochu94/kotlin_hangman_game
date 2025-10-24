@@ -103,7 +103,7 @@ class Session(
                 letterIsFound = true
                 wordList[i] = guessedChar
                 println(wordList.joinToString(" "))
-                println("$guessedChar is found in the word $wordToFind at the ${i + 1} place")
+                println("Letter '$guessedChar' is found in the word $wordToFind")
             }
         }
         if (!letterIsFound) {
@@ -161,11 +161,12 @@ class Session(
 
     public fun playRound() {
         for (player in playersOrder) {
-            println(hangmanStates[hangmanStateIndex])
-            printWordProgress()
             var playerGuess: String
             var goodGuess: Boolean = false
             do {
+                Thread.sleep(2000)
+                println(hangmanStates[hangmanStateIndex])
+                printWordProgress()
                 if (goodGuess) {
                     print("Letter was found, you can play again!\n${player.name}'s turn\n->")
                 } else if (!goodGuess) {
@@ -173,6 +174,7 @@ class Session(
                 }
                 var guessAlreadyCalled: Boolean = false
                 playerGuess = player.makeAGuess()
+                if (playerGuess == "log") printPreviousGuesses()
                 if (playerGuess.length == 1) {
                     println("You guessed a letter")
                     if (playerGuess[0] in letterCalled) {
