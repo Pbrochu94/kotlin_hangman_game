@@ -46,20 +46,34 @@ class Session(
         "website"
     )
 ) {
-    protected var hangman: String = "____\n    |\n    |\n    |"
+    protected var hangmanStateIndex: Int = 0
+    public var hangmanStates: MutableList<String> = mutableListOf(
+        "        ======\n        |    ||\n             ||\n             ||\n             ||\n             ||",
+        "        ======\n        |    ||\n        0    ||\n             ||\n             ||\n             ||",
+        "        ======\n        |    ||\n        0    ||\n        |    ||\n             ||\n             ||",
+        "        ======\n        |    ||\n        0    ||\n       /|    ||\n             ||\n             ||",
+        "        ======\n        |    ||\n        0    ||\n       /|\\   ||\n             ||\n             ||",
+        "        ======\n        |    ||\n        0    ||\n       /|\\   ||\n       /     ||\n             ||",
+        "        ======\n        |    ||\n        0    ||\n       /|\\   ||\n       / \\   ||\n       Dead  ||"
+
+    )
     var wordProgress: MutableList<Char> = mutableListOf()
     var letterCalled: MutableList<Char> = mutableListOf()
     var wordCalled: MutableList<String> = mutableListOf()//<---------------------WORK HERE
     protected var gameIsWon: Boolean = false
     protected val players: MutableList<Player> = mutableListOf()
     protected val playersOrder: MutableList<Player> = mutableListOf()
+    protected fun printWordProgress() {
+        val wordProgressInStr: String = wordProgress.joinToString("")
+        println("Word to guess -> $wordProgressInStr")
+    }
 
     protected fun selectFirstPlayer() {
         var rngNmb: Int = Math.random().roundToInt()
         when (rngNmb) {
             0 -> {
                 players[0].turnToPlay = true
-                println("${players[0].name} is starting")
+                println("${players[0].name} is the first to play.")
                 //Add to order list
                 playersOrder.add(players[0])
                 playersOrder.add(players[1])
@@ -67,12 +81,18 @@ class Session(
 
             1 -> {
                 players[1].turnToPlay = true
-                println("${players[1].name} is starting")
+                println("${players[1].name} is the first to play.")
                 //Switch order
                 playersOrder.add(players[1])
                 playersOrder.add(players[0])
             }
         }
+    }
+
+    protected fun printPreviousGuesses() {
+        println("Here is all the previous word and characters called:")
+        println("Words: $wordCalled")
+        println("Letters: $letterCalled")
     }
 
     protected fun checkIfCharIsFound(wordList: MutableList<Char>, guessedChar: Char): Boolean {
@@ -95,7 +115,6 @@ class Session(
 
     protected fun checkIfAllLettersFound() {
         val wordProgressInStr: String = wordProgress.joinToString("")
-        println(wordProgressInStr)
         if (wordProgressInStr == wordToFind) gameIsWon = true
     }
 
@@ -120,6 +139,10 @@ class Session(
         wordToFind = wordBank.random()
     }
 
+    protected fun updateHangman() {
+
+    }
+
     public fun startGame() {
         generateWord()
         initEmptyWordProgress()
@@ -138,13 +161,15 @@ class Session(
 
     public fun playRound() {
         for (player in playersOrder) {
+            println(hangmanStates[hangmanStateIndex])
+            printWordProgress()
             var playerGuess: String
             var goodGuess: Boolean = false
             do {
                 if (goodGuess) {
                     print("Letter was found, you can play again!\n${player.name}'s turn\n->")
                 } else if (!goodGuess) {
-                    print("Guess a letter or the whole word.\n${player.name}'s turn\n->")
+                    print("${player.name} can guess a letter or the whole word.\n*type 'log' to see previous guesses*\n->")
                 }
                 var guessAlreadyCalled: Boolean = false
                 playerGuess = player.makeAGuess()
@@ -167,6 +192,7 @@ class Session(
                 }
                 if (gameIsWon) return endGame()
             } while (guessAlreadyCalled || goodGuess)
+            updateHangman()
         }
     }
 

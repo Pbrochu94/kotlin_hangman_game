@@ -1,6 +1,4 @@
-
-
-fun main(){
+fun main() {
     val gameSession = Session()
     gameSession.startGame()
 }
