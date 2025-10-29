@@ -1,4 +1,7 @@
+package classes
+
 import kotlin.math.roundToInt
+import kotlin.text.iterator
 
 class Player(val name: String) {
     var turnToPlay: Boolean = false
@@ -61,6 +64,7 @@ class Session(
     var letterCalled: MutableList<Char> = mutableListOf()
     var wordCalled: MutableList<String> = mutableListOf()//<---------------------WORK HERE
     protected var gameIsWon: Boolean = false
+    protected var gameover: Boolean = false
     protected val players: MutableList<Player> = mutableListOf()
     protected val playersOrder: MutableList<Player> = mutableListOf()
     protected fun printWordProgress() {
@@ -103,11 +107,11 @@ class Session(
                 letterIsFound = true
                 wordList[i] = guessedChar
                 println(wordList.joinToString(" "))
-                println("Letter '$guessedChar' is found in the word $wordToFind")
+                println("Letter '$guessedChar' found in the word!")
             }
         }
         if (!letterIsFound) {
-            println("$guessedChar is not found in the word ${wordToFind}")
+            println("$guessedChar is not found in the word.")
         }
         letterCalled.add(guessedChar)
         return letterIsFound
@@ -139,10 +143,6 @@ class Session(
         wordToFind = wordBank.random()
     }
 
-    protected fun updateHangman() {
-
-    }
-
     public fun startGame() {
         generateWord()
         initEmptyWordProgress()
@@ -152,15 +152,21 @@ class Session(
         selectFirstPlayer()
         do {
             playRound()
-        } while (!gameIsWon)
+        } while (!gameIsWon && !gameover)
     }
 
     public fun endGame() {
-        println("You guess the word $wordToFind ! Games ending...")
+        println("You guess the word $wordToFind !")
     }
 
     public fun playRound() {
         for (player in playersOrder) {
+            if (hangmanStateIndex == hangmanStates.size - 1) {
+                println(hangmanStates[hangmanStateIndex])
+                println("<--------GAME OVER-------->")
+                gameover = true
+                return
+            }//If the hangman is complete, game over
             var playerGuess: String
             var goodGuess: Boolean = false
             do {
@@ -168,33 +174,38 @@ class Session(
                 println(hangmanStates[hangmanStateIndex])
                 printWordProgress()
                 if (goodGuess) {
-                    print("Letter was found, you can play again!\n${player.name}'s turn\n->")
+                    print("You can play again!\n${player.name}'s turn\n->")
                 } else if (!goodGuess) {
                     print("${player.name} can guess a letter or the whole word.\n*type 'log' to see previous guesses*\n->")
                 }
                 var guessAlreadyCalled: Boolean = false
                 playerGuess = player.makeAGuess()
-                if (playerGuess == "log") printPreviousGuesses()
-                if (playerGuess.length == 1) {
-                    println("You guessed a letter")
-                    if (playerGuess[0] in letterCalled) {
-                        println("Letter ${playerGuess[0]} already called")
-                        guessAlreadyCalled = true
+                when {
+                    playerGuess == "log" -> printPreviousGuesses()
+                    playerGuess.length == 1 -> {
+                        if (playerGuess[0] in letterCalled) {
+                            println("Letter ${playerGuess[0]} already called")
+                            guessAlreadyCalled = true
+                        }
+                        goodGuess = checkIfCharIsFound(
+                            wordList = wordProgress,
+                            guessedChar = playerGuess[0]//Using the first and only letter of the guess
+                        )
+                        checkIfAllLettersFound()
                     }
-                    goodGuess = checkIfCharIsFound(
-                        wordList = wordProgress,
-                        guessedChar = playerGuess[0]//Using the first and only letter of the guess
-                    )
-                    checkIfAllLettersFound()
-                } else {
-                    if (playerGuess == wordToFind) gameIsWon = true
-                    else {
-                        wordCalled.add(playerGuess)
+
+                    playerGuess.length > 1 -> {
+                        if (playerGuess == wordToFind) gameIsWon = true
+                        else {
+                            wordCalled.add(playerGuess)
+                            goodGuess = false
+                            println("The word is not $playerGuess")
+                        }
                     }
                 }
                 if (gameIsWon) return endGame()
-            } while (guessAlreadyCalled || goodGuess)
-            updateHangman()
+            } while (guessAlreadyCalled || goodGuess || playerGuess == "log")//
+            hangmanStateIndex++
         }
     }
 
